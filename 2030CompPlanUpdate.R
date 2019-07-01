@@ -147,12 +147,16 @@ toc.sec4$sub.sec_f <- factor(toc.sec4$sub.sec, levels = paste("4.", rev(seq(1,10
 toc.sec4$np.desc <- str_wrap(toc.sec4$np.desc, width = wrap_len)
 toc.sec4$rn <- 1:nrow(toc.sec4)
 
-toc.sec4$fill <- "white"
+toc.sec4$fill <- NA
+#toc.sec4$fill <- "white"
 
 #yellow fills----
-toc.sec4$fill[grepl("AT4.18", toc.sec4$np.desc)] <- "yellow"
-toc.sec4$fill[grepl("AT4.6", toc.sec4$np.desc)] <- "yellow"
-toc.sec4$fill[grepl("PT4.14", toc.sec4$np.desc)] <- "yellow"
+toc.sec4$fill[grepl("AT4.18", toc.sec4$np.desc)] <- "New Directive"
+toc.sec4$fill[grepl("AT4.6", toc.sec4$np.desc)] <- "New Directive"
+toc.sec4$fill[grepl("PT4.14", toc.sec4$np.desc)] <- "New Directive"
+toc.sec4$fill[grepl("PT4.11", toc.sec4$np.desc)] <- "New Directive"
+toc.sec4$fill[grepl("PT4.6", toc.sec4$np.desc)] <- "New Directive"
+toc.sec4$fill[grepl("PT4.3", toc.sec4$np.desc)] <- "New Directive"
 
 
 
@@ -161,7 +165,7 @@ ggplot() +
              aes(x = NA, y = factor(rn), hjust = 0,
                  #color = transit.impact,
                  label = np.desc, 
-                 fill = I(fill)
+                 fill = fill
                  )) +
   facet_grid(sub.sec_f+name.short~., scale = "free_y", space = "free_y", 
              switch = "y", 
@@ -170,10 +174,12 @@ ggplot() +
   theme(strip.text.y = element_text(angle = 180), 
         axis.text = element_blank(), 
         axis.ticks = element_blank(), 
-        axis.title.x = element_blank()) +
+        axis.title.x = element_blank(), ) +
+  scale_fill_manual(na.translate = FALSE, values = "yellow") +
   scale_y_discrete(name = "Section") +
   scale_x_discrete(name = "Impact on Transit") +
   labs(title = "Summary 2030 Comp Plan Changes", 
        subtitle = "relevant to public transit", 
        caption = paste("updated", Sys.Date()), 
-       color = "Impact on Transit")
+       fill = "Concerns") +
+  ggsave("2030Changes.png", scale = 1.5, width = 9.2, units = "in")
