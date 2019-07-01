@@ -48,8 +48,18 @@ cityplanning.prj <- rbind(fun_project("2030 Comp Plan Update",
                                       last.updated = date.updated, 
                                       "citywide", "active", 
                                       start.date = ymd(20190606), 
-                                      end.date = ymd(20191231), 
-                                      url = NA))
+                                      end.date = ymd(20200101), 
+                                      url = NA), 
+                          fun_project("Bike Plan Update", date.updated, "citywide", 
+                                      "implementation", 
+                                      start.date = NA, 
+                                      end.date = NA, 
+                                      url = NA), 
+                          fun_project("Southeast Special Area Study", 
+                                      last.updated = date.updated, 
+                                      "area plans", "active", 
+                                      start.date = NA, 
+                                      end.date = NA))
 cityplanning.evnt <- rbind(fun_event("Ask a Planner", 
                                      "2030 Comp Plan Update", 
                                      "RMB 237", ymd(20190702)), 
@@ -61,7 +71,10 @@ cityplanning.evnt <- rbind(fun_event("Ask a Planner",
                                      "Council Chambers", ymd(20190903)), 
                            fun_event("Begin: Station Area Planning", 
                                      "Raleigh BRT: Equitable Development Around Transit", 
-                                     NA, ymd(20200101)))
+                                     NA, ymd(20200101)), 
+                           fun_event("September Workshops", 
+                                     "Raleigh BRT: Equitable Development Around Transit", 
+                                     NA, ymd(20190901)))
 
 #tidy wrap long text strings
 cityplanning.evnt$project.name <- str_wrap(cityplanning.evnt$project.name, width = wrap_len)
@@ -70,10 +83,12 @@ cityplanning.prj$project.name  <- str_wrap(cityplanning.prj$project.name, width 
 #tidy events
 cityplanning.evnt <- inner_join(cityplanning.evnt, cityplanning.prj[!colnames(cityplanning.prj) %in% c("start.date", "end.date")])
 
+cityplanning.prj <- cityplanning.prj[cityplanning.prj$project.status == "active",]
+cityplanning.evnt<- cityplanning.evnt[cityplanning.evnt$project.status == "active",]
 #plot----
 ggplot() + 
-  geom_vline(xintercept = Sys.Date(), color = "black", 
-             linetype = 2)+
+  geom_vline(xintercept = Sys.Date(), color = "grey", 
+             size = 1.25, linetype = 1)+
   geom_segment(data = cityplanning.prj, 
                size = 2.0,
                aes(x = start.date, xend = end.date, 
@@ -105,7 +120,7 @@ ggplot() +
         #axis.ticks.y = element_blank(), 
         axis.title = element_blank(),
         legend.position = "none") +
-  facet_grid(project.status~.,  
+  facet_grid(project.type~.,  
              #margins = "project.name",
              space = "free_y", scales = "free_y") +
   labs(title = "Raleigh City Planning Ongoing Projects", 
