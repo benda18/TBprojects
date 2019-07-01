@@ -5,7 +5,7 @@ library("ggrepel")
 
 
 #vars----
-wrap_len <- 25
+wrap_len <- 30
 
 #functions----
 fun_project <- function(project.name, last.updated,
@@ -58,16 +58,20 @@ cityplanning.prj$project.name  <- str_wrap(cityplanning.prj$project.name, width 
 
 #plot----
 ggplot() + 
-  geom_vline(xintercept = Sys.Date(), color = "red")+
+  geom_vline(xintercept = Sys.Date(), color = "black", 
+             linetype = 2232)+
   geom_segment(data = cityplanning.prj, 
+               size = 2.0,
                aes(x = start.date, xend = end.date, 
                    y = project.name,
                    yend = project.name, 
-                   group = project.name)) +
+                   group = project.name, 
+                   color = project.name)) +
   geom_point(data = cityplanning.evnt, 
              size = 4, shape = 21, fill = "white", 
              aes(x = event.date, 
-                 y = project.name)) +
+                 y = project.name, 
+                 color = project.name)) +
   geom_label_repel(data = cityplanning.evnt, 
                    fill = "white", 
                    min.segment.length = 0, point.padding = unit(0.325, "inches"),
@@ -75,7 +79,20 @@ ggplot() +
                    direction = "y", 
                    aes(x = event.date, 
                        y = project.name, 
-                       label = event.name))
+                       label = event.name)) +
+  scale_x_date(name = "Date") +
+  theme_linedraw() + 
+  theme(strip.text.y = element_text(angle = 180), 
+        axis.text.y = element_blank(), 
+        axis.ticks.y = element_blank(), 
+        axis.title.y = element_blank(),
+        legend.position = "none") +
+  facet_grid(project.name~.,  
+             #margins = "project.name",
+             space = "free_y", scales = "free_y", 
+             switch = "y") +
+  labs(title = "title", 
+       color = "Project")
 
 # #import city calendar from api----
 # #http://data-ral.opendata.arcgis.com/datasets/public-meetings-calendar
