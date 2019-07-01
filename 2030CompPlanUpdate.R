@@ -147,13 +147,16 @@ toc.sec4$sub.sec_f <- factor(toc.sec4$sub.sec, levels = paste("4.", rev(seq(1,10
 toc.sec4$np.desc <- str_wrap(toc.sec4$np.desc, width = wrap_len)
 toc.sec4$rn <- 1:nrow(toc.sec4)
 
+toc.sec4$fill <- "white"
+
 
 
 ggplot() + 
-  geom_label(data = toc.sec4, 
-             aes(x = NA, y = factor(rn), 
+  geom_label(data = toc.sec4, size = 3.0, nudge_x = -0.55,
+             aes(x = NA, y = factor(rn), hjust = 0,
                  #color = transit.impact,
-                 label = np.desc
+                 label = np.desc, 
+                 fill = I(fill)
                  )) +
   facet_grid(sub.sec_f+name.short~., scale = "free_y", space = "free_y", 
              switch = "y", 
