@@ -149,6 +149,11 @@ toc.sec4$rn <- 1:nrow(toc.sec4)
 
 toc.sec4$fill <- "white"
 
+#yellow fills----
+toc.sec4$fill[grepl("AT4.18", toc.sec4$np.desc)] <- "yellow"
+toc.sec4$fill[grepl("AT4.6", toc.sec4$np.desc)] <- "yellow"
+toc.sec4$fill[grepl("PT4.14", toc.sec4$np.desc)] <- "yellow"
+
 
 
 ggplot() + 
