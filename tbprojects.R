@@ -5,6 +5,7 @@ library("ggrepel")
 
 
 #vars----
+wrap_len <- 25
 
 #functions----
 fun_project <- function(project.name, last.updated,
@@ -50,23 +51,31 @@ cityplanning.prj <- rbind(fun_project("2030 Comp Plan Update",
 cityplanning.evnt <- rbind(fun_event("Ask a Planner", "2030 Comp Plan Update", 
                                      "RMB 237", ymd(20190702)))
 
+#tidy wrap long text strings
+cityplanning.evnt$project.name <- str_wrap(cityplanning.evnt$project.name, width = wrap_len)
+cityplanning.prj$project.name  <- str_wrap(cityplanning.prj$project.name, width = wrap_len) 
+
+
 #plot----
 ggplot() + 
+  geom_vline(xintercept = Sys.Date(), color = "red")+
   geom_segment(data = cityplanning.prj, 
                aes(x = start.date, xend = end.date, 
-                   y = str_wrap(project.name,0,25),
-                   yend = str_wrap(project.name,0,25), 
-                   group = str_wrap(project.name,0,25))) +
+                   y = project.name,
+                   yend = project.name, 
+                   group = project.name)) +
   geom_point(data = cityplanning.evnt, 
+             size = 4, shape = 21, fill = "white", 
              aes(x = event.date, 
-                 y = str_wrap(project.name,0,25))) +
-  geom_text_repel(data = cityplanning.evnt, 
-                  min.segment.length = 0, point.padding = unit(0.125, "inches"),
-                  arrow = arrow(angle = 20, type = "closed", unit(0.075, "inches")),
-                  direction = "y", 
-                  aes(x = event.date, 
-                      y = str_wrap(project.name,0,25), 
-                      label = event.name))
+                 y = project.name)) +
+  geom_label_repel(data = cityplanning.evnt, 
+                   fill = "white", 
+                   min.segment.length = 0, point.padding = unit(0.325, "inches"),
+                   arrow = arrow(angle = 20, type = "closed", unit(0.075, "inches")),
+                   direction = "y", 
+                   aes(x = event.date, 
+                       y = project.name, 
+                       label = event.name))
 
 # #import city calendar from api----
 # #http://data-ral.opendata.arcgis.com/datasets/public-meetings-calendar
