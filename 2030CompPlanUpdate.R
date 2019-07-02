@@ -114,67 +114,48 @@ toc.sec4 <- rbind(fun_toc("4.1", "Land Use and Transportation Coordination",
                           np.desc = c(NA)), 
                   fun_toc("4.4", "Public Transportation", "transit",
                           transit.impact = TRUE, 
-                          np.desc = c("PT4.1 promote transit with emphasis on trasnit-dependent households", 
-                                      "PT4.3 prioritize frequent transit investments in corridors with greatest
-                                      potential to attract riders and shape development", 
+                          np.desc = c("PT4.1 promote transit with emphasis on transit-dependent households", 
+                                      "PT4.3 freq. transit in corridors w/ greatest potential to attract riders and shape dev.", 
                                       "PT4.4 reserve rights-of-way for transit", 
                                       "PT4.5 promote transit efficiency by reducing wait time and transfer time...", 
-                                      "PT4.6 substitute event-based transit for on-site parking where feasible to free
-                                      land for other uses around event locations", 
-                                      "PT4.7 increase service between residential and employment areas as well as
-                                      to regional facilities such as RDU and RTP", 
-                                      "PT4.8 new developments should coordinate with goraleigh to provide stop facilities 
-                                      that are lit, include a shelter, bench and waste bin and other amenities", 
-                                      "PT4.9 ID bike/ped needs within reasonable distance of transit stops in need of
-                                      enchancements", 
+                                      "PT4.6 substitute event-based transit for on-site parking where feasible", 
+                                      "PT4.7 increase service b/w res. & emp. areas & to regional facs such as RDU & RTP", 
+                                      "PT4.8 new devs to coord. w/ goraleigh to provide stop facilities and amenities", 
+                                      "PT4.9 ID bike/ped needs in proximity of transit stops in need of enchancements", 
                                       "PT4.10 transit-first features such as TSP and queue jumps", 
                                       "PT4.11 Demand-response transit - support expansion of GoRaleigh Access...",
                                       "PT4.12 Special needs - provide transit for... senior citizens", 
                                       "PT4.13 crosstown travel", 
-                                      "PT4.14 provide ciruclator services fo facilitate mobility within identified
-                                      City Growth Centers", 
+                                      "PT4.14 provide ciruclator services in identified City Growth Centers", 
                                       "PT4.16 bus stop spacing", 
-                                      "AT4.6 locate park & rides along capital/atlantic, six forks, glenwood, 
-                                      creedmoor, new bern, west raleigh, arena area, south saunders/tryon", 
+                                      "AT4.6 p&r's on CAP/ATL, SixFrks, GW, Creedmoor, NBern, W.Ral, Arena, SS/Tryon", 
                                       "AT4.18 develop a public outreach campaign" )), 
                   fun_toc("4.5", "Pedestrian and Bicycle Circulation", "bike-ped", 
-                          np.desc = c("PT5.1 Enhance bike/ped access, circulation and safety [at]... transit stations...")), 
+                          np.desc = c("PT5.1 Enhance bike/ped access, circulation and safety [at]... transit stations")), 
                   fun_toc("4.6", "Parking Management","parking", 
-                          np.desc = c("PT6.2 establish transit station parking program and management strategies for 
-                                      proposed and planned stations", 
+                          np.desc = c("PT6.2 establish station parking program and mgmt strategies for planned stations", 
                                       "PT6.5 reduce minimum parking standards to increase use of transit", 
-                                      "AT6.2 require shopping centers on existing or planned transit routes with >400 parking 
-                                      spaces to provide 5% of spaces as park & ride spaces")), 
+                                      "AT6.2 shopping centers w/ >400 parking spaces to provide 5% as park & ride spaces")), 
                   fun_toc("4.7", "Transportation Safety Improvements", "safety"), 
                   fun_toc("4.8", "Commercial Truck and Rail Freight", "freight"), 
                   fun_toc("4.9", "Future Street Improvements", "future street imprvmts"), 
                   fun_toc("4.10", "Emerging Technologies", "innovation"),
                   fun_toc("6.3", "Entrepreneurs and Business Development", "Business Dev.", 
-                          np.desc = c("PED3.13 provide high-quality transit service to attract employers, 
-                          link jobs to workers and maintain a high quality of life")), 
+                          np.desc = c("PED3.13 provide transit to attract employers, link jobs to workers")), 
                   fun_toc("6.4", "Workforce Training and Access to Employment", "job access", 
-                          np.desc = c("PED4.9 increase access to job opportunities by providing improved transit service 
-                                      to all of Raleigh's major job centers as well as regional employment clusters")), 
+                          np.desc = c("PED4.9 provide transit to all major job centers and regional employment clusters")), 
                   fun_toc("7.2", "Affordable Housing", "af. housing", 
-                          np.desc = c("PH2.13 locate transit in areas currently occupied by subsidized
-                                      affordable housing", 
+                          np.desc = c("PH2.13 locate transit in areas currently occupied by subsidized affordable housing", 
                                       "PH2.14 expand transit to serve housing in all parts of the city")),
                   fun_toc("10.5", "Health and Human Services", "hlth human svcs", 
-                          np.desc = c("PCS5.5 promote transit accessibilty for health and 
-                                      human services facilities")), 
+                          np.desc = c("PCS5.5 promote transit accessibilty for health and human services facilities")), 
                   fun_toc("Maps", "Maps", "maps", 
-                          np.desc = c("UD-1 Urban Form Map designates transit emphasis corridors, core transit areas, 
-                          and TODs")), 
+                          np.desc = c("UD-1 Urban Form Map inc transit emphasis corridors, core transit areas and TODs")), 
                   fun_toc("11.8", "Transit-supportive Design", "transit-supprtve\ndesign", 
-                          np.desc = c("PUD8.8 station area public realm - streets w/in 1/4mi of stations should include places for
-                                      transit users to sit and rest when waiting", 
-                                      "PUD8.10 park & ride locations near fixed rail and brt
-                                      stations",
-                                      "PUD8.11 promote use of crime prevention through 
-                                      environmental design techniques near rail 
-                                      and brt stations", 
-                                      "AUD8.4 pursue parking facilites immediately surrounding transit 
-                                      stations through public funds and incentives"))) %>% 
+                          np.desc = c("PUD8.8 streets w/in 1/4mi of stations to include places for transit users to sit and rest", 
+                                      "PUD8.10 park & ride locations near fixed rail and brt stations",
+                                      "PUD8.11 promote crime prevention through environmental design near stations", 
+                                      "AUD8.4 pursue parking facilites immediately surrounding transit stations"))) %>% 
   as_tibble()
 toc.sec4$sub.sec_f <- factor(toc.sec4$sub.sec, 
                              levels = c("Maps", "11.8", "10.5", "7.2", "6.4", "6.3", 
@@ -232,16 +213,16 @@ ggplot() +
              as.table = FALSE) +
   theme_bw()+
   theme(strip.text.y = element_text(angle = 180), 
-        axis.text.x = element_blank(), 
+        axis.text = element_blank(), 
         axis.ticks = element_blank(), 
         axis.title.x = element_blank(), 
         legend.background = element_rect(color = "black", fill = "light grey")) +
   scale_fill_manual(na.translate = FALSE, 
-                    values = c("white", "yellow")) +
+                    values = c("yellow", "white")) +
   scale_y_discrete(name = "Section") +
   scale_x_discrete(name = "Impact on Transit") +
   labs(title = "Summary 2030 Comp Plan Changes", 
-       subtitle = "relevant to public transit", 
+       #subtitle = "relevant to public transit", 
        caption = paste("updated", Sys.Date()), 
        fill = "Changes") +
   ggsave("2030Changes.png", scale = 1.5, width = 9.2, units = "in")
