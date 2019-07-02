@@ -181,32 +181,45 @@ toc.sec4$sub.sec_f <- factor(toc.sec4$sub.sec,
                                         paste("4.", rev(seq(1,10,1)), sep = "")))
 
 toc.sec4$np.desc <- str_wrap(toc.sec4$np.desc, width = wrap_len)
-toc.sec4$rn <- 1:nrow(toc.sec4)
 
 #toc.sec4$fill <- NA
 #toc.sec4$fill <- "white"
 
 #yellow fills----
-toc.sec4$fill[grepl("AT4.18", toc.sec4$np.desc)] <- "Notable\nChange"
-toc.sec4$fill[grepl("AT4.6", toc.sec4$np.desc)] <- "Notable\nChange"
-toc.sec4$fill[grepl("PT4.14", toc.sec4$np.desc)] <- "Notable\nChange"
-toc.sec4$fill[grepl("PT4.11", toc.sec4$np.desc)] <- "Notable\nChange"
-toc.sec4$fill[grepl("PT4.6", toc.sec4$np.desc)] <- "Notable\nChange"
-toc.sec4$fill[grepl("PT4.3", toc.sec4$np.desc)] <- "Notable\nChange"
-toc.sec4$fill[grepl("PT5.1", toc.sec4$np.desc)] <- "Notable\nChange"
-toc.sec4$fill[grepl("PT6.2", toc.sec4$np.desc)] <- "Notable\nChange"
-toc.sec4$fill[grepl("AT6.2", toc.sec4$np.desc)] <- "Notable\nChange"
-toc.sec4$fill[grepl("PH2.13", toc.sec4$np.desc)] <- "Notable\nChange"
-toc.sec4$fill[grepl("PCS5.5", toc.sec4$np.desc)] <- "Notable\nChange"
-toc.sec4$fill[grepl("UD-1", toc.sec4$np.desc)] <- "Notable\nChange"
-toc.sec4$fill[grepl("PUD8.10", toc.sec4$np.desc)] <- "Notable\nChange"
-toc.sec4$fill[grepl("PUD8.11", toc.sec4$np.desc)] <- "Notable\nChange"
-toc.sec4$fill[grepl("AUD8.4", toc.sec4$np.desc)] <- "Notable\nChange"
+toc.sec4$fill[grepl("AT4.18", toc.sec4$np.desc)] <- "Notable\nChanges"
+toc.sec4$fill[grepl("AT4.6", toc.sec4$np.desc)] <- "Notable\nChanges"
+toc.sec4$fill[grepl("PT4.14", toc.sec4$np.desc)] <- "Notable\nChanges"
+toc.sec4$fill[grepl("PT4.11", toc.sec4$np.desc)] <- "Notable\nChanges"
+toc.sec4$fill[grepl("PT4.6", toc.sec4$np.desc)] <- "Notable\nChanges"
+toc.sec4$fill[grepl("PT4.3", toc.sec4$np.desc)] <- "Notable\nChanges"
+toc.sec4$fill[grepl("PT5.1", toc.sec4$np.desc)] <- "Notable\nChanges"
+toc.sec4$fill[grepl("PT6.2", toc.sec4$np.desc)] <- "Notable\nChanges"
+toc.sec4$fill[grepl("AT6.2", toc.sec4$np.desc)] <- "Notable\nChanges"
+toc.sec4$fill[grepl("PH2.13", toc.sec4$np.desc)] <- "Notable\nChanges"
+toc.sec4$fill[grepl("PCS5.5", toc.sec4$np.desc)] <- "Notable\nChanges"
+toc.sec4$fill[grepl("UD-1", toc.sec4$np.desc)] <- "Notable\nChanges"
+toc.sec4$fill[grepl("PUD8.10", toc.sec4$np.desc)] <- "Notable\nChanges"
+toc.sec4$fill[grepl("PUD8.11", toc.sec4$np.desc)] <- "Notable\nChanges"
+toc.sec4$fill[grepl("AUD8.4", toc.sec4$np.desc)] <- "Notable\nChanges"
 
-toc.sec4$fill[is.na(toc.sec4$fill)] <- "Change"
+toc.sec4$fill[is.na(toc.sec4$fill)] <- "Other\nChanges"
 
 #remove NA subsections
 toc.sec4 <- toc.sec4[!is.na(toc.sec4$np.desc),]
+
+#row numbers
+toc.sec4$rn <- 1:nrow(toc.sec4)
+toc.sec4$rn <- NA
+names(toc.sec4)
+for (ss in unique(toc.sec4$sub.sec_f)) {
+  for (f in unique(toc.sec4$fill[toc.sec4$sub.sec_f %in% ss])) {
+    for(d in 1:nrow(toc.sec4[toc.sec4$sub.sec_f == ss & 
+                             toc.sec4$fill == f,])) {
+      toc.sec4$rn[toc.sec4$sub.sec_f == ss & 
+                  toc.sec4$fill == f][d] <- d
+    }
+  }
+}
 
 ggplot() + 
   geom_label(data = toc.sec4, size = 3.0, nudge_x = -0.55,
@@ -214,12 +227,12 @@ ggplot() +
                  label = np.desc, 
                  fill = fill
              )) +
-  facet_grid(sub.sec_f+name.short~., scale = "free_y", space = "free_y", 
+  facet_grid(sub.sec_f+name.short~fill, scale = "free_y", space = "free_y", 
              switch = "y", 
              as.table = FALSE) +
   theme_bw()+
   theme(strip.text.y = element_text(angle = 180), 
-        axis.text = element_blank(), 
+        axis.text.x = element_blank(), 
         axis.ticks = element_blank(), 
         axis.title.x = element_blank(), 
         legend.background = element_rect(color = "black", fill = "light grey")) +
