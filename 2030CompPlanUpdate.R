@@ -8,13 +8,14 @@ wrap_len <- 200
 
 #functions----
 fun_toc <- function(sub.sec, name, name.short = NA, np.desc = NA, notable.policy = NA, 
-                    transit.impact = FALSE) {
+                    transit.impact = FALSE, fill = NA) {
   df.out <- data.frame(sub.sec = sub.sec, 
                        name = name, 
                        name.short = name.short, 
                        transit.impact = transit.impact, 
                        notable.policy = notable.policy, 
                        np.desc = np.desc, 
+                       fill = fill,
                        stringsAsFactors = FALSE)
   return(df.out)
 }
@@ -136,37 +137,83 @@ toc.sec4 <- rbind(fun_toc("4.1", "Land Use and Transportation Coordination",
                                       "AT4.6 locate park & rides along capital/atlantic, six forks, glenwood, 
                                       creedmoor, new bern, west raleigh, arena area, south saunders/tryon", 
                                       "AT4.18 develop a public outreach campaign" )), 
-                  fun_toc("4.5", "Pedestrian and Bicycle Circulation", "bike-ped"), 
-                  fun_toc("4.6", "Parking Management","parking"), 
+                  fun_toc("4.5", "Pedestrian and Bicycle Circulation", "bike-ped", 
+                          np.desc = c("PT5.1 Enhance bike/ped access, circulation and safety [at]... transit stations...")), 
+                  fun_toc("4.6", "Parking Management","parking", 
+                          np.desc = c("PT6.2 establish transit station parking program and management strategies for 
+                                      proposed and planned stations", 
+                                      "PT6.5 reduce minimum parking standards to increase use of transit", 
+                                      "AT6.2 require shopping centers on existing or planned transit routes with >400 parking 
+                                      spaces to provide 5% of spaces as park & ride spaces")), 
                   fun_toc("4.7", "Transportation Safety Improvements", "safety"), 
                   fun_toc("4.8", "Commercial Truck and Rail Freight", "freight"), 
                   fun_toc("4.9", "Future Street Improvements", "future street imprvmts"), 
-                  fun_toc("4.10", "Emerging Technologies", "innovation")) %>% as_tibble()
-toc.sec4$sub.sec_f <- factor(toc.sec4$sub.sec, levels = paste("4.", rev(seq(1,10,1)), sep = ""))
+                  fun_toc("4.10", "Emerging Technologies", "innovation"),
+                  fun_toc("6.3", "Entrepreneurs and Business Development", "Business Dev.", 
+                          np.desc = c("PED3.13 provide high-quality transit service to attract employers, 
+                          link jobs to workers and maintain a high quality of life")), 
+                  fun_toc("6.4", "Workforce Training and Access to Employment", "job access", 
+                          np.desc = c("PED4.9 increase access to job opportunities by providing improved transit service 
+                                      to all of Raleigh's major job centers as well as regional employment clusters")), 
+                  fun_toc("7.2", "Affordable Housing", "af. housing", 
+                          np.desc = c("PH2.13 locate transit in areas currently occupied by subsidized
+                                      affordable housing", 
+                                      "PH2.14 expand transit to serve housing in all parts of the city")),
+                  fun_toc("10.5", "Health and Human Services", "hlth human svcs", 
+                          np.desc = c("PCS5.5 promote transit accessibilty for health and 
+                                      human services facilities")), 
+                  fun_toc("Maps", "Maps", "maps", 
+                          np.desc = c("UD-1 Urban Form Map designates transit emphasis corridors, core transit areas, 
+                          and TODs")), 
+                  fun_toc("11.8", "Transit-supportive Design", "transit-supprtve\ndesign", 
+                          np.desc = c("PUD8.8 station area public realm - streets w/in 1/4mi of stations should include places for
+                                      transit users to sit and rest when waiting", 
+                                      "PUD8.10 park & ride locations near fixed rail and brt
+                                      stations",
+                                      "PUD8.11 promote use of crime prevention through 
+                                      environmental design techniques near rail 
+                                      and brt stations", 
+                                      "AUD8.4 pursue parking facilites immediately surrounding transit 
+                                      stations through public funds and incentives"))) %>% 
+  as_tibble()
+toc.sec4$sub.sec_f <- factor(toc.sec4$sub.sec, 
+                             levels = c("Maps", "11.8", "10.5", "7.2", "6.4", "6.3", 
+                                        paste("4.", rev(seq(1,10,1)), sep = "")))
 
 toc.sec4$np.desc <- str_wrap(toc.sec4$np.desc, width = wrap_len)
 toc.sec4$rn <- 1:nrow(toc.sec4)
 
-toc.sec4$fill <- NA
+#toc.sec4$fill <- NA
 #toc.sec4$fill <- "white"
 
 #yellow fills----
-toc.sec4$fill[grepl("AT4.18", toc.sec4$np.desc)] <- "New Directive"
-toc.sec4$fill[grepl("AT4.6", toc.sec4$np.desc)] <- "New Directive"
-toc.sec4$fill[grepl("PT4.14", toc.sec4$np.desc)] <- "New Directive"
-toc.sec4$fill[grepl("PT4.11", toc.sec4$np.desc)] <- "New Directive"
-toc.sec4$fill[grepl("PT4.6", toc.sec4$np.desc)] <- "New Directive"
-toc.sec4$fill[grepl("PT4.3", toc.sec4$np.desc)] <- "New Directive"
+toc.sec4$fill[grepl("AT4.18", toc.sec4$np.desc)] <- "Notable\nChange"
+toc.sec4$fill[grepl("AT4.6", toc.sec4$np.desc)] <- "Notable\nChange"
+toc.sec4$fill[grepl("PT4.14", toc.sec4$np.desc)] <- "Notable\nChange"
+toc.sec4$fill[grepl("PT4.11", toc.sec4$np.desc)] <- "Notable\nChange"
+toc.sec4$fill[grepl("PT4.6", toc.sec4$np.desc)] <- "Notable\nChange"
+toc.sec4$fill[grepl("PT4.3", toc.sec4$np.desc)] <- "Notable\nChange"
+toc.sec4$fill[grepl("PT5.1", toc.sec4$np.desc)] <- "Notable\nChange"
+toc.sec4$fill[grepl("PT6.2", toc.sec4$np.desc)] <- "Notable\nChange"
+toc.sec4$fill[grepl("AT6.2", toc.sec4$np.desc)] <- "Notable\nChange"
+toc.sec4$fill[grepl("PH2.13", toc.sec4$np.desc)] <- "Notable\nChange"
+toc.sec4$fill[grepl("PCS5.5", toc.sec4$np.desc)] <- "Notable\nChange"
+toc.sec4$fill[grepl("UD-1", toc.sec4$np.desc)] <- "Notable\nChange"
+toc.sec4$fill[grepl("PUD8.10", toc.sec4$np.desc)] <- "Notable\nChange"
+toc.sec4$fill[grepl("PUD8.11", toc.sec4$np.desc)] <- "Notable\nChange"
+toc.sec4$fill[grepl("AUD8.4", toc.sec4$np.desc)] <- "Notable\nChange"
 
+toc.sec4$fill[is.na(toc.sec4$fill)] <- "Change"
 
+#remove NA subsections
+toc.sec4 <- toc.sec4[!is.na(toc.sec4$np.desc),]
 
 ggplot() + 
   geom_label(data = toc.sec4, size = 3.0, nudge_x = -0.55,
              aes(x = NA, y = factor(rn), hjust = 0,
-                 #color = transit.impact,
                  label = np.desc, 
                  fill = fill
-                 )) +
+             )) +
   facet_grid(sub.sec_f+name.short~., scale = "free_y", space = "free_y", 
              switch = "y", 
              as.table = FALSE) +
@@ -174,12 +221,14 @@ ggplot() +
   theme(strip.text.y = element_text(angle = 180), 
         axis.text = element_blank(), 
         axis.ticks = element_blank(), 
-        axis.title.x = element_blank(), ) +
-  scale_fill_manual(na.translate = FALSE, values = "yellow") +
+        axis.title.x = element_blank(), 
+        legend.background = element_rect(color = "black", fill = "light grey")) +
+  scale_fill_manual(na.translate = FALSE, 
+                    values = c("white", "yellow")) +
   scale_y_discrete(name = "Section") +
   scale_x_discrete(name = "Impact on Transit") +
   labs(title = "Summary 2030 Comp Plan Changes", 
        subtitle = "relevant to public transit", 
        caption = paste("updated", Sys.Date()), 
-       fill = "Concerns") +
+       fill = "Changes") +
   ggsave("2030Changes.png", scale = 1.5, width = 9.2, units = "in")
