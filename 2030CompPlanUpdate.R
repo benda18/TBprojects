@@ -223,7 +223,7 @@ for (ss in unique(toc.sec4$sub.sec_f)) {
 
 ggplot() + 
   geom_label(data = toc.sec4, size = 3.0, nudge_x = -0.55,
-             aes(x = NA, y = factor(rn), hjust = 0,
+             aes(x = NA, y = factor(rn, levels = rev(1:15)), hjust = 0,
                  label = np.desc, 
                  fill = fill
              )) +
