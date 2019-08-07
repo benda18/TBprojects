@@ -1,0 +1,419 @@
+#runaways
+#https://stackoverflow.com/questions/27347548/r-assign-variable-labels-of-data-frame-columns
+
+#library("devtools")
+# devtools::install_github("bnosac/RDRPOSTagger")
+# devtools::install_github("ropensci/tokenizers")
+library("RDRPOSTagger")
+library("tokenizers")
+#library(NLP)
+#library(openNLP)
+library("readr")
+library("dplyr")
+library("lubridate")
+library("reshape2")
+library("ggplot2")
+library("haven")
+library("Hmisc")
+
+#functions----
+process.hvn <- function(name = "placcons", v = ta$placcons) {
+  df.out <- data.frame(val  = as.numeric(attributes(v)$labels), 
+                       name = trimws(names(attributes(v)$labels)), 
+                       stringsAsFactors = F)
+  colnames(df.out) <- c(paste(name,"value", sep = "."), 
+                        paste(name,"name", sep = "."))
+  return(df.out)
+}
+
+#transatlantic
+ta <- read_sav("tastdb-exp-2016.sav") 
+
+#process_labels----
+ta_labels <- data.frame(col_nam = colnames(ta), label = label(ta), stringsAsFactors = FALSE)
+# placcons <- data.frame(placcons.value = as.numeric(attributes(ta$placcons)$labels), 
+#                        placcons.name  = names(attributes(ta$placcons)$labels), 
+#                        stringsAsFactors = F)
+placcons <- process.hvn(name = "placcons", v = ta$placcons)
+rig      <- process.hvn(name = "rig",      v = ta$rig)
+constreg <- process.hvn(name = "constreg", v = ta$constreg)
+year5    <- process.hvn(name = "year5",    v = ta$year5)
+year10   <- process.hvn(name = "year10",   v = ta$year10)
+year25   <- process.hvn(name = "year25",   v = ta$year25)
+year100  <- process.hvn(name = "year100",  v = ta$year100)
+fate     <- process.hvn(name = "fate",     v = ta$fate)
+
+#ta munging----
+ta2 <- ta
+ta2$placcons.value <- as.numeric(ta2$placcons)
+ta2$rig.value      <- as.numeric(ta2$rig)
+ta2$constreg.value <- as.numeric(ta2$constreg)
+ta2$year5.value    <- as.numeric(ta2$year5)
+ta2$year10.value   <- as.numeric(ta2$year10)
+ta2$year25.value   <- as.numeric(ta2$year25)
+ta2$year100.value  <- as.numeric(ta2$year100)
+ta2$fate.value     <- as.numeric(ta2$fate)
+
+#drop munged columns----
+munged.cols <- c("placcons", "rig", "constreg", 
+                 "year5", "year10", "year25", 
+                 "year100", "fate")
+ta3 <- ta2[!colnames(ta2) %in% munged.cols]
+
+#munged joins----
+ta4 <- ta3 %>% 
+  left_join(., placcons) %>% 
+  left_join(., rig) %>%
+  left_join(., constreg) %>%
+  left_join(., year5) %>%
+  left_join(., year10) %>%
+  left_join(., year25) %>%
+  left_join(., year100) %>%
+  left_join(., fate)
+
+
+ships <- ta4 %>% #ship, crew, captain, 
+  group_by(shipname, 
+           constreg.name, 
+           placcons.name, 
+           rig.name, 
+           yrcons, 
+           yrreg) %>%
+  summarise(n = n()) %>%
+  .[order(.$n, decreasing = TRUE),]
+
+guns.mounted <- ta4 %>% 
+  group_by(voyageid, guns, 
+           shipname, rig.name, placcons.name, 
+           yrcons, yrreg, Date_dep) %>% 
+  summarise(n = n()) %>%
+  .[order(.$n, decreasing = TRUE),]
+
+deaths <- ta4 %>%
+  group_by(sladvoy, Date_dep, voyageid) %>% 
+  summarise(n = n()) %>%
+  group_by(year = year(Date_dep)) %>%
+  summarise(n = n(), total.sladvoy = sum(sladvoy, na.rm = TRUE)) %>%
+  .[order(.$n, decreasing = T),]
+
+ggplot(data = deaths[is.na(deaths$year) != TRUE,], 
+       aes(x = year, y = total.sladvoy)) + 
+  geom_smooth() +
+  geom_point()
+
+#mortality----
+all.mort <-ta4 %>%
+  group_by(vymrtrat, voyageid, Date_dep) %>%
+  summarise(n = n())
+
+ggplot(data = all.mort, 
+       aes(y = vymrtrat, x = Date_dep)) + 
+  geom_point(alpha = 0.3, size = 0.1)+
+  geom_smooth() +
+  theme_bw()
+
+#notorious captains----
+not.capn <- ta4 %>%
+  group_by(fate.name, captaina) %>%
+  summarise(n = n(), 
+            min.mrt = min(vymrtrat, na.rm = TRUE), 
+            max.mrt = max(vymrtrat, na.rm = TRUE), 
+            mean.mrt = mean(vymrtrat, na.rm = TRUE), 
+            median.mrt = median(vymrtrat, na.rm = TRUE), 
+            sd.mrt = sd(vymrtrat, na.rm = TRUE))%>%
+  .[order(.$n, decreasing = T),]
+
+fate.types <- ta4 %>% 
+  group_by(fate.name, voyageid) %>% 
+  summarise(n = n()) %>% 
+  .[order(.$n, decreasing = T),]
+
+fate.types$category <- NA
+fate.types %>%
+  group_by(category, voyageid) %>% 
+  summarise(n = n()) %>% 
+  group_by(category) %>% 
+  summarise(n = n()) %>%
+  .[order(.$n, decreasing = T),]
+
+fate.types$category[grepl("Court", fate.types$fate.name, ignore.case = F) &
+                     grepl("condemned", fate.types$fate.name, ignore.case = T)] <- "condemned by Court"
+fate.types$category[grepl("Court", fate.types$fate.name, ignore.case = F) &
+                     grepl("restored", fate.types$fate.name, ignore.case = T)] <- "restored by Court"
+fate.types$category[grepl("French proceedings", fate.types$fate.name, ignore.case = F) &
+                     grepl("acquittal", fate.types$fate.name, ignore.case = T)] <- "restored by Court"
+fate.types$category[grepl("French proceedings", fate.types$fate.name, ignore.case = F) &
+                     grepl("condemned", fate.types$fate.name, ignore.case = T)] <- "condemned by Court"
+fate.types$category[grepl("French proceedings", fate.types$fate.name, ignore.case = F) &
+                     grepl("unknown outcome", fate.types$fate.name, ignore.case = T)] <- "unknown outcome by Court"
+fate.types$category[grepl("Captured", fate.types$fate.name, ignore.case = T)] <- "Captured"
+fate.types$category[grepl("^Condemned", fate.types$fate.name, ignore.case = F)] <- "Condemned"
+fate.types$category[grepl("^Abandoned", fate.types$fate.name, ignore.case = F)] <- "Abandoned"
+fate.types$category[grepl("^Destroyed", fate.types$fate.name, ignore.case = F)] <- "Shipwrecked or Destroyed"
+fate.types$category[grepl("^Shipwrecked", fate.types$fate.name, ignore.case = F)] <- "Shipwrecked or Destroyed"
+fate.types$category[grepl("subsequent fate unknown", fate.types$fate.name, ignore.case = T)] <- "Fate Unknown"
+fate.types$category[grepl("no further record", fate.types$fate.name, ignore.case = T)] <- "Fate Unknown"
+fate.types$category[grepl("unknown", fate.types$fate.name, ignore.case = T)] <- "Fate Unknown"
+fate.types$category[grepl("laid up", fate.types$fate.name, ignore.case = T)] <- "broken up"
+fate.types$category[grepl("broken up", fate.types$fate.name, ignore.case = T)] <- "broken up"
+fate.types$category[grepl("disarmed", fate.types$fate.name, ignore.case = T)] <- "broken up"
+fate.types$category[grepl("pirates", fate.types$fate.name, ignore.case = T)] <- "pirates"
+fate.types$category[grepl("privateers", fate.types$fate.name, ignore.case = T)] <- "pirates"
+fate.types$category[grepl("given up", fate.types$fate.name, ignore.case = T)] <- "given up or taken"
+fate.types$category[grepl("taken", fate.types$fate.name, ignore.case = T)] <- "given up or taken"
+fate.types$category[grepl("completed", fate.types$fate.name, ignore.case = T)] <- "voyage completed"
+fate.types$category[grepl("detained and condemned", fate.types$fate.name, ignore.case = T)] <- "condemned"
+
+
+
+
+#vars----
+tp.n <- 20
+
+
+
+moments <- data.frame(name = c("Fugitive Slave Act", "Northwest Ordinance", 
+                               "Invention of Cotton Gin"), 
+                      date = c(ymd(18500918), ymd(17870713), ymd(17940101)), 
+                      stringsAsFactors = F)
+
+run <- read_csv("results.csv")
+run$jooq.advertisement.publication_date <- ymd(run$jooq.advertisement.publication_date)
+run_sample <- run[sample(nrow(run), 10000),]
+
+rm(run)
+names(run_sample)
+
+grp2 <- c("jooq.advertisement.publication_date",
+          "jooq.enslaved_person.gender",
+          "jooq.enslaved_person.skills",
+          "jooq.enslaved_person_name.fullname",
+          "jooq.runaway_enslavers.enslaver_status", 
+          "runaway_location_location.name",
+          "runaway_location_location.state",
+          "enslaver_location.state")
+
+run_sum <- run_sample %>%
+  group_by_at(grp2) %>%
+  summarise(n = n()) %>%
+  .[order(.$n, decreasing = TRUE),] %>%
+  .[is.na(.[,1]) != TRUE,]
+
+colnames(run_sample)
+colnames(run_sample) <- c("ad.id", "ad.type", "ad.date", "newspaper.id", 
+                          "adv.id", "adv.name", "adv.loc.id", "ensl.id", 
+                          "ensl.gender", "ensl.min.birth.yr", "ensl.max.birth.yr", 
+                          "ensl.skills", "ensl.name.id", "ensl.person.id", 
+                          "ensl.fullname", "enslvr.id", "enslvr.type", "enslvr.loc.id", 
+                          "newspaper.id2", "newspaper.name", "newspaper.loc", 
+                          "runaway.id", "runaway.person.id", "runaway.enslvr.id", 
+                          "runaway.enslvr.runaway.id", "runaway.enslvr.enslvr.id", 
+                          "runaway.enslvr.status", "runaway.loc.id", "runaway.loc2.id", 
+                          "runaway.loc.name", "runaway.loc.state", "enslvr.loc.name", 
+                          "enslvr.loc.state", "runaway.event.id", "runaway.loc3.id", 
+                          "enslvr.loc.id2")
+colnames(run_sample)
+
+
+#validate----
+names(run_sample)
+#/validate----
+
+#names----
+enslaved.fullnames <- run_sum %>% 
+  group_by(jooq.enslaved_person_name.fullname, 
+           jooq.enslaved_person.gender) %>%
+  summarise(n = n()) %>%
+  .[order(.$n, decreasing = TRUE),] %>%
+  .[is.na(.[,1]) != TRUE,] %>%
+  .[is.na(.[,2]) != TRUE,]
+enslaved.fullnames$enslaved_fullname_f <- 
+  factor(enslaved.fullnames$jooq.enslaved_person_name.fullname, 
+         levels = unique(enslaved.fullnames$jooq.enslaved_person_name.fullname[
+           order(enslaved.fullnames$n)]))
+enslaved.fullnames <- as.data.frame(enslaved.fullnames)
+top_enslaved.fullnames <- rbind(top_n(x = enslaved.fullnames[enslaved.fullnames$jooq.enslaved_person.gender == "MALE",], 
+                                      n = tp.n, wt = n)[1:tp.n,], 
+                                top_n(x = enslaved.fullnames[enslaved.fullnames$jooq.enslaved_person.gender == "FEMALE",], 
+                                      n = tp.n, wt = n)[1:tp.n,])
+top_enslaved.fullnames$enslaved_fullname_f <- 
+  factor(top_enslaved.fullnames$jooq.enslaved_person_name.fullname, 
+         levels = unique(top_enslaved.fullnames$jooq.enslaved_person_name.fullname[
+           order(top_enslaved.fullnames$n)]))
+
+ggplot() + 
+  geom_col(data = top_enslaved.fullnames, 
+           aes(x = enslaved_fullname_f, 
+               y = n)) +
+  coord_flip() +
+  labs(title = "Top Names") +
+  facet_grid(jooq.enslaved_person.gender~., scales = "free", space = "free")
+
+#gender----
+enslaved.genders  <- run_sum %>% 
+  group_by(jooq.enslaved_person.gender) %>%
+  summarise(n = n()) %>%
+  .[order(.$n, decreasing = TRUE),] %>%
+  .[is.na(.[,1]) != TRUE,]
+enslaved.genders$enslaved_genders_f <- 
+  factor(enslaved.genders$jooq.enslaved_person.gender, 
+         levels = enslaved.genders$jooq.enslaved_person.gender[
+           order(enslaved.genders$n)])
+
+ggplot() + 
+  geom_col(data = top_n(enslaved.genders, tp.n, wt = n), 
+           aes(x = enslaved_genders_f, 
+               y = n)) +
+  coord_flip() +
+  labs(title = "Top Genders")
+
+#publish_dates----
+pub.dates <- data.frame(pub_date = run_sum$jooq.advertisement.publication_date)
+pub.dates <- run_sample[is.na(run_sample$jooq.advertisement.publication_date) == FALSE & 
+                          is.na(run_sample$jooq.newspaper.name) == FALSE,]
+ggplot() +
+  geom_density(data = pub.dates, alpha = 0.5, position = "stack",
+               size = 0.2,
+               aes(x = jooq.advertisement.publication_date,
+                   fill = jooq.newspaper.name)) +
+  geom_vline(data = moments, 
+             color = "red", size = 2, alpha = 0.75, 
+             aes(xintercept = date))+
+  scale_x_date(limits = c(ymd(17200101), ymd(18700101)),
+               date_labels = "%Y",
+               date_breaks = "20 years") +
+  theme(legend.position = "none") + 
+  scale_y_sqrt()
+
+#skills----
+enslaved.skills <- run_sample$jooq.enslaved_person.skills %>% 
+  tolower() %>%
+  .[grepl("not provided", .) == FALSE] %>%
+  .[grepl("not_provided", .) == FALSE] %>%
+  tokenize_words(.) %>%
+  unlist() %>%
+  .[is.na(.) != T]
+unipostagger <- rdr_model(language = "English", annotation = "UniversalPOS")
+unipostags <- rdr_pos(unipostagger, enslaved.skills)
+
+unipostag_types <- c("ADJ" = "adjective", "ADP" = "adposition", "ADV" = "adverb",
+                     "AUX" = "auxiliary", "CONJ" = "coordinating conjunction",
+                     "DET" = "determiner", "INTJ" = "interjection", "NOUN" = "noun",
+                     "NUM" = "numeral", "PART" = "particle", "PRON" = "pronoun",
+                     "PROPN" = "proper noun", "PUNCT" = "punctuation",
+                     "SCONJ" = "subordinating conjunction", "SYM" = "symbol",
+                     "VERB" = "verb", "X" = "other") %>%
+  as.data.frame(.)
+unipostag_types$pos <- rownames(unipostag_types)
+colnames(unipostag_types) <- c("name", "pos")
+
+skills.summarised <- unipostags %>%
+  group_by(token, pos) %>% 
+  summarise(n = n()) %>% 
+  .[order(.$n, decreasing = TRUE),] %>%
+  inner_join(., unipostag_types) %>%
+  .[!.$name %in% 
+      c("pronoun", "numeral", "particle", 
+        "adverb", "adposition", "auxiliary", 
+        "determiner", "adjective", "verb"),]
+skills.summarised$token_f <- factor(skills.summarised$token, 
+                                    levels = unique(skills.summarised$token[order(skills.summarised$n)])) 
+skills.summarised <- as.data.frame(skills.summarised)
+
+ggplot() + 
+  geom_point(data = top_n(skills.summarised, 50, n), 
+             aes(x = n, y = token_f, color = name)) 
+# 
+# ggplot(data = data.frame(x = sample(30, 200, replace = TRUE)/30, 
+#                          y = sample(30, 200, replace = TRUE)/30, 
+#                          z = sample(3, 200, replace = TRUE)*1000), 
+#        aes(x = x, y = y, weight = z)) + 
+#   geom_bin2d(bins = 5) +
+#   geom_density2d(bins = 5, color = "white") +
+#   geom_point(shape = 21, fill = "white", color = "blue", 
+#              alpha = 0.66,
+#              aes(size = z)) +
+#   scale_fill_viridis_c(option = "C")
+
+#text <- "Rubik's Cube is a 3-D combination puzzle invented in 1974 by Hungarian sculptor and professor of architecture Ernő Rubik. Originally called the Magic Cube, the puzzle was licensed by Rubik to be sold by Ideal Toy Corp. in 1980 via businessman Tibor Laczi and Seven Towns founder Tom Kremer, and won the German Game of the Year special award for Best Puzzle that year. As of January 2009, 350 million cubes had been sold worldwide making it the world's top-selling puzzle game. It is widely considered to be the world's best-selling toy."
+# sentences <- tokenize_sentences(text, simplify = TRUE)
+# unipostags <- rdr_pos(unipostagger, sentences)
+# unipostags$word.type <- unipostag_types[unipostags$pos]
+
+#state----
+runaway_enslaver.state <- run_sum %>% 
+  group_by(runaway_location_location.state, 
+           enslaver_location.state) %>%
+  summarise(n = n()) %>%
+  .[order(.$n, decreasing = TRUE),] %>%
+  .[is.na(.[,1]) != TRUE,]
+
+# number of times runaway----
+run_sample <- as.data.frame(run_sample)
+# large runaway events----
+runaway.event <- run_sample[is.na(run_sample$jooq.runaway_event.id) != TRUE,] %>%
+  .[!duplicated(.),] %>%
+  group_by(jooq.runaway_event.id,
+           jooq.runaway.enslaved_person_id,
+           jooq.runaway_enslavers.id) %>%
+  summarise(n = n()) %>%
+  group_by(jooq.runaway_event.id,
+           jooq.runaway_enslavers.id) %>%
+  summarise(n = n()) %>%
+  .[order(.$n, decreasing = TRUE),] %>%
+  as.data.frame()
+nn <- 33
+ggplot() + 
+  geom_point(data = top_n(runaway.event, nn, n)[1:nn,], 
+             aes(y = jooq.runaway_event.id, 
+                 x = n)) +
+  facet_grid(jooq.runaway_enslavers.id~., 
+             scales = "free", space = "free")
+
+temp <- data.frame(a = c(1:3, NA), 
+                   b = c(1:2, NA, NA), 
+                   c = c(1,NA,NA, NA))
+apply(X = temp, 
+      MARGIN = 1, 
+      FUN = is.na)
+
+as.data.frame(is.na(temp))
+
+
+# run_m <- melt(run_sample, measure.vars = c("jooq.enslaver.id", 
+#                                     "jooq.enslaver.type", 
+#                                     "jooq.enslaver.location_id", 
+#                                     "enslaver_location.name", 
+#                                     "enslaver_location.state", 
+#                                     "enslaver_location.id"), 
+#               variable.name     = "var_enslaver", 
+#               value.name        = "val_enslaver") 
+# run_m <- melt(run_m, measure.vars = c("jooq.enslaved_person.id",
+#                            "jooq.enslaved_person.gender",
+#                            "jooq.enslaved_person.min_birth_year",
+#                            "jooq.enslaved_person.max_birth_year",
+#                            "jooq.enslaved_person.skills",
+#                            "jooq.enslaved_person_name.id",
+#                            "jooq.enslaved_person_name.enslaved_person_id",
+#                            "jooq.enslaved_person_name.fullname"), 
+#        variable.name   = "var_enslaved", 
+#        value.name      = "val_enslaved") 
+# run_m <- melt(run_m, measure.vars = c("jooq.runaway.id",                       
+#                            "jooq.runaway.enslaved_person_id" ,      
+#                            "jooq.runaway_enslavers.id" ,            
+#                            "jooq.runaway_enslavers.runaway_id" ,    
+#                            "jooq.runaway_enslavers.enslaver_id" ,   
+#                            "jooq.runaway_enslavers.enslaver_status",
+#                            "jooq.runaway_location.id" ,             
+#                            "jooq.runaway_location.runaway_id" ,     
+#                            "jooq.runaway_location.location_id" ,    
+#                            "jooq.runaway_location.type" ,           
+#                            "runaway_location_location.name"  ,      
+#                            "runaway_location_location.state" ,      
+#                            "jooq.runaway_event.id"   ,              
+#                            "runaway_location_location.id"),
+#        variable.name = "var_runaway",
+#        value.name = "val_runaway")
+# 
+# head(run_m)
+# names(run_m)
